@@ -1,5 +1,6 @@
 import time
 import os
+from threading import Thread
 import urllib.request
 from loguru import logger
 from selenium import webdriver
@@ -16,7 +17,27 @@ os.environ["all_proxy"] = "socks5://127.0.0.1:7890"
 
 url = "https://www.mangacopy.com/"
 headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36"}
+cookie = {'name': 'token', 'value': '1db18e80eb4755c6e4cf335c451c7956ceccd235'}
 
+def initialize_driver():
+    chrome_options = Options()
+    # headless mode
+    chrome_options.add_argument("--headless=new") 
+    # incognito mode
+    chrome_options.add_argument("--incognito")
+    # disable cache
+    chrome_options.add_argument("--disk-cache-size=0")
+    chrome_options.add_argument("--disable-application-cache")
+    # disable gpu and sandbox to save space
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")
+    # Proxy set
+    chrome_options.add_argument('--proxy-server=http://127.0.0.1:7890')
+    driver = webdriver.Chrome(options = chrome_options)
+    driver.implicitly_wait(10)
+    driver.maximize_window()
+
+    return driver
 
 def enter_load_page_x(driver, manga_name, page_x):
     return
@@ -60,35 +81,20 @@ def download_img(img_url,filnem):
                 f.write(response.read()) 
             logger.info(str(filnem) + " Downloaded success! ")
             return filename
+        elif (response.getcode() == 429):
+            logger.info(f"Too many requests! Status code: {response.getcode()}")
     except Exception as oo:
-        logger.error(f"Download_Error " + str(oo))
+        logger.error(f"Download_Error: {oo} Status code: {response.getcode()}")
         return "failed"
 
 if __name__ == "__main__":
 
-    chrome_options = Options()
-    chrome_options.add_argument("--headless=new") 
-    # 启用无痕模式（关闭后自动清理临时数据）
-    chrome_options.add_argument("--incognito")
-    # 禁用缓存
-    chrome_options.add_argument("--disk-cache-size=0")
-    chrome_options.add_argument("--disable-application-cache")
-    # 禁用 GPU 和沙盒（减少临时文件）
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--no-sandbox")
-    # Proxy set
-    chrome_options.add_argument('--proxy-server=http://127.0.0.1:7890')
-    driver = webdriver.Chrome(options = chrome_options)
-    # driver = webdriver.Chrome()
-    driver.implicitly_wait(10)
-    driver.maximize_window()
+    driver = initialize_driver()
 
     manga_name = "shengxiadebangxiong"
-    cookie = {'name': 'token', 'value': '1db18e80eb4755c6e4cf335c451c7956ceccd235'}
     loading_string = "https://hi77-overseas.mangafuna.xyz/static/websitefree/jpg/loading.jpg"
     
     href_list = get_default_page_list(driver, manga_name)
-
 
     for i in range(len(href_list)):
         logger.info("Enter every manga_list's getting process")
@@ -97,15 +103,23 @@ if __name__ == "__main__":
         # As for each href, create download folder by order
         logger.info("Creating download folder")
         try:
-            os.makedirs(f"./img/sxdbx/_{ i + 1 }", exist_ok = True)
+            os.makedirs(f"./img/sxdbx/第{ i + 1 }話", exist_ok = True)
         except Exception as e:
             logger.error(f"Creating download folder_Error: {e}")
 
+        thread_list = []
+
         # get all imgs for each manga_list
         for j in range(len(manga_list)):
-            try:
-                download_img(manga_list[j], f"./img/sxdbx/_{ i + 1 }/{j}" + ".jpg")
-            except Exception as e:
-                logger.error(f"Whole Download_Error: {e}")
+            t1 = Thread(target = download_img, args = (manga_list[j], f"./img/sxdbx/第{ i + 1 }話/{ j + 1 }" + ".jpg"))
+            thread_list.append(t1)
+            time.sleep(0.5)
+        
+        for t in thread_list:
+            t.setDaemon(True)
+            t.start()
+        for t in thread_list:
+            t.join()
+        logger.info(f"Manga 第{ i + 1 }話 Downloaded success!")
     
     driver.quit()
