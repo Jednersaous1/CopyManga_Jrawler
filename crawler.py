@@ -100,7 +100,7 @@ def download_img(img_url,filnem):
 def parse_main():
     # Parse main arguments
     parser = argparse.ArgumentParser(description = "CopyManga_Jrawler Help Manual")
-    parser.add_argument("-m", "--manga", required = True, help = "Enter wanted manga's name")
+    parser.add_argument("-m", "--manga", required = True, help = "Enter wanted manga's name with pinyin format")
     parser.add_argument("-c", "--cookie", required = True, help = "Enter your copymanga website's cookie(token)")
     args = parser.parse_args()
     return args
