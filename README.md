@@ -1,5 +1,7 @@
 # CopyManga_Jrawler
 
+[中文文档](https://raw.githubusercontent.com/Jednersaous1/CopyManga_Jrawler/refs/heads/main/README_CN.md)
+
 > [!NOTE]
 > Recommend using Python Virtual Environment!
 >
@@ -21,6 +23,7 @@ Provide two methods for authentication (You should choose only one of them at th
 2. Username and Password (All Plaintext! But won't save anywhere)
 
 ```
+> git clone https://github.com/Jednersaous1/CopyManga_Jrawler.git
 > pip install -r requirements.txt
 > ./crawler.py -h
 usage: crawler.py [-h] -m MANGA [-c COOKIE] [-u USERNAME] [-p PASSWORD] [-ch [CHAPTER ...]]
