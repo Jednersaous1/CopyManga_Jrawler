@@ -1,6 +1,6 @@
 # CopyManga_Jrawler
 
-[中文文档](https://raw.githubusercontent.com/Jednersaous1/CopyManga_Jrawler/refs/heads/main/README_CN.md)
+[中文文档](https://github.com/Jednersaous1/CopyManga_Jrawler/blob/main/README_CN.md)
 
 > [!NOTE]
 > Recommend using Python Virtual Environment!
