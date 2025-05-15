@@ -24,6 +24,7 @@ Provide two methods for authentication (You should choose only one of them at th
 
 ```
 > git clone https://github.com/Jednersaous1/CopyManga_Jrawler.git
+> cd ./CopyManga_Jrawler
 > pip install -r requirements.txt
 > ./crawler.py -h
 usage: crawler.py [-h] -m MANGA [-c COOKIE] [-u USERNAME] [-p PASSWORD] [-ch [CHAPTER ...]]

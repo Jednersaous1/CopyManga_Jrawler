@@ -17,6 +17,7 @@ import check
 # 3. Collect user input and parse for variables -> use argparse
 # 4. specify wanted manga chapter
 # 5. replace cookie set of logining (no captcha)
+# 6. replace index of crawl specific chapter name
 # done
 
 # Proxy set(Clash)
@@ -73,7 +74,7 @@ def login(driver: webdriver, username, password, login_url):
         return True
     except Exception as e:
         logger.error(f"Login_Error: {e}")
-    return False
+        return False
 
 
 def get_default_page_list(driver: webdriver, manga_name, url):
@@ -81,12 +82,16 @@ def get_default_page_list(driver: webdriver, manga_name, url):
         driver.get(url + "comic/" + manga_name)
         div = driver.find_element(By.ID, "default全部")
         a_tags = div.find_elements(By.TAG_NAME, "a")
+        li_tags = div.find_elements(By.TAG_NAME, "li")
         href_list = [a.get_attribute("href") for a in  a_tags if a.get_attribute("target") == "_blank"]
+        name_list = [li.get_attribute("innerHTML") for li in li_tags if li.get_attribute("class") == '']
+        # remove unneed <li> content
+        name_list.pop()
     except Exception as e:
         logger.error(f"PageList_Error: {e}")
         quit()
     
-    return href_list
+    return href_list, name_list
 
 def get_img_list(driver: webdriver, href, cookie):
     if cookie:
@@ -144,6 +149,7 @@ if __name__ == "__main__":
     if arguments.cookie:
         cookie = {'name': 'token', 'value': arguments.cookie}
     # Set credential
+    login_res = None
     login_username = arguments.username
     login_password = arguments.password
     # Set Manga name
@@ -161,8 +167,11 @@ if __name__ == "__main__":
     if login_username and login_password:
         login_res = login(driver, login_username, login_password, login_url)
 
-    if login_res:
-        href_list = get_default_page_list(driver, manga_name, url)
+    if login_res or cookie != None:
+        href_list, name_list = get_default_page_list(driver, manga_name, url)
+    else:
+        logger.error("You don't provide cookie or username/password, please check your arguments!")
+        quit()
 
     # Set specific manga chapter
     if arguments.chapter:
@@ -177,7 +186,7 @@ if __name__ == "__main__":
         # As for each href, try create download folder by order
         logger.info("Creating download folder")
         try:
-            os.makedirs(f"./img/{manga_name}/第{ i + 1 }話", exist_ok = True)
+            os.makedirs(f"./img/{manga_name}/{name_list[i]}", exist_ok = True)
         except Exception as e:
             logger.error(f"Creating download folder_Error: {e}")
 
@@ -186,7 +195,7 @@ if __name__ == "__main__":
 
         # get all imgs for each manga_list using thread list
         for j in range(len(manga_list)):
-            t1 = Thread(target = download_img, args = (manga_list[j], f"./img/{manga_name}/第{ i + 1 }話/{ j + 1 }" + ".jpg"))
+            t1 = Thread(target = download_img, args = (manga_list[j], f"./img/{manga_name}/{name_list[i]}/{ j + 1 }" + ".jpg"))
             thread_list.append(t1)
             time.sleep(0.5)
         
@@ -195,6 +204,6 @@ if __name__ == "__main__":
             t.start()
         for t in thread_list:
             t.join()
-        logger.info(f"Manga {manga_name} 第{ i + 1 }話 Downloaded success!")
+        logger.info(f"Manga {manga_name} {name_list[i]} Downloaded success!")
     
     driver.quit()
